@@ -1,0 +1,81 @@
+2）能使用Pandas的read_csv实现对csv文件的加载；
+3）能使用pandas处理缺失值和重复值；
+4）能使用Pandas和Numpy对数据进行数据分析；
+5）能使用Matplotlib对数据进行可视化操作。
+
+
+from idlelib.iomenu import encoding
+from locale import normalize
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from docutils.nodes import label
+from numpy.f2py.auxfuncs import istrue
+
+plt.rcParams['font.sans-serif']=['SimHei']
+plt.rcParams['axes.unicode_minus']=False
+
+#加载数据集
+station=pd.read_excel('station.xlsx')
+print(station.shape) #返回数据行列数
+station.sample(10) #随机取指定列数
+
+#2观察数据
+station.info()
+
+#4清洗数据
+data=station.drop('businessZones',axis=1)
+print(data)
+
+data.drop_duplicates(subset=['positionId'],keep='first',inplace=True)
+data.fillna({"companyLabelList": "无"}, inplace=True)
+data.dropna(inplace=True)
+data.info()
+
+data['salary']=data['salary'].str.upper()
+salary=data['salary'].str.findall(r"\d+")
+data["salary_min"]=salary.str.get(0).astype('float')
+data["salary_max"]=salary.str.get(1).astype('float')
+data["salary_avg"]=data[["salary_min","salary_max"]].mean(axis=1)
+data
+
+isTrue=data['positionName'].str.contains('数据分析') #职位中是否包含‘数据分析’
+data=data[isTrue]
+data.reset_index(inplace=True)
+data
+
+data["workYear"]=data["workYear"].replace({"不限":"1年以下","应届毕业生":"1年以下"})
+data
+#不同城市对数据分析师的需求数量
+grb=data.groupby(['city']).agg({'positionName':'count'}).sort_values(by='positionName',ascending=False).head(10)
+grb
+#绘图说明不同城市对数据分析师的需求数量
+grb.plot(kind='bar',figsize=(10,5),fontsize=12)
+plt.legend(['岗位数量'])
+plt.xlabel('工作地点',fontsize=15)
+plt.show()
+
+#学历占比
+data['education'].value_counts(normalize=True)
+
+plt.pie(data['education'].value_counts(normalize=True),
+        labels=['本科','硕士','大专','不限','博士'],
+        autopct='%.lf%%',
+        startangle=180)
+plt.axis('equal')
+plt.show()
+
+
+#总体薪酬分布
+plt.figure(figsize=(12,9))  # 显式创建新画布
+salary=data['salary_avg']
+plt.hist(salary, bins=30)
+plt.xlabel('K/月')
+
+
+#各城市薪资对比
+plt.figure(figsize=(8,5))
+city_salary=data.groupby('city')['salary_avg'].mean().sort_values(ascending=False)
+plt.bar(x=city_salary.index,height=city_salary.values)
+plt.show()
