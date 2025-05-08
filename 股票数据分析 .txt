@@ -1,3 +1,8 @@
+1、数据接口访问准备
+网址：https://data.eastmoney.com/center/
+2、使用selenium爬取股票个股资金流向数据,并且保存为CSV格式的文件
+3.使用pandas、matplotlib模块读取该CSV文件，并且以其中的股票名称为X轴，以最新价为y轴，将其中的数据用直方图展示出来，保存该图片
+
 #第一步
 #导入模块
 import csv
