@@ -1,0 +1,56 @@
+#第一步
+#导入模块
+import csv
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#禁止浏览器自动关闭
+option=webdriver.EdgeOptions()
+option.add_experimental_option("detach",True)
+
+#第二步
+#driver = webdriver.Edge()
+driver = webdriver.Edge(options=option)
+driver.get('https://finance.sina.com.cn/stock/sl/')
+
+
+#第三步
+# 在浏览器中打开百度网站
+#窗口最大化
+driver.maximize_window()
+##time.sleep(5)  # 暂停 5 秒
+
+#第四步
+#定位元素
+table=driver.find_element(By.CSS_SELECTOR,"#datatbl tbody")
+value = table.text
+#print(value)
+
+
+lines = value.split('\n')
+split_list = [item.split() for item in lines]
+#print(split_list)
+# 打开文件，如果文件不存在则创建
+
+with open("./doc/gupiao_xinlang.csv", "w", encoding="utf-8", newline='') as file:
+    writer = csv.writer(file)
+    for row in split_list:
+        if(len(row) == 12):
+            writer.writerow(row)  # 写入每一行
+
+
+# 读取 CSV 文件
+df = pd.read_csv('./doc/gupiao_xinlang.csv',na_values=['NaN',''])
+x=df.iloc[0:10, 7]
+y=df.iloc[0:10, 10]
+
+# 设置支持中文的字体
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体
+plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+plt.figure(figsize=(10, 6))
+plt.bar(x,y)
+plt.savefig("gupiao_hist.png")
+plt.show()
