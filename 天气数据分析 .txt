@@ -1,0 +1,68 @@
+1、数据接口访问准备
+网址：https://www.juhe.cn/docs/api/id/73
+注册并实名认证该网站
+申请该接口的访问key
+2、使用python3爬取天气预报数据,并且保存问CSV格式的文件
+3.使用pandas、matplotlib模块读取该CSV文件，并且以其中的“date”为X轴，将返回的”temperature”字段解析出来（去掉℃，以/分割提取最低、最高温度），分别以最低温度、最高温度为y轴，将其中的数据用折线图展示出来，保存该图片
+
+
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
+apiUrl = 'http://apis.juhe.cn/simpleWeather/query'
+apiKey = '6a876c2afab33bcfbe7bee066ca0a018'
+
+def mat():
+    df = pd.read_csv('./doz/weather.csv',na_values=['NaN',''])# 设置支持中文的字体
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体
+    plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+    x = df['date']
+    y =df ['high_temperature']
+    plt.figure(figsize=(10, 6))
+    plt.plot(x,y)
+    # 以日期为 X 轴，最高温度为 y 轴绘制折线图
+    plt.title("天气分析最高温度折线图")
+    plt.xlabel("date")
+    plt.ylabel("最高温度")
+    plt.savefig("weather.png")
+
+def mat_z():
+    df = pd.read_csv('./doz/weather.csv',na_values=['NaN',''])# 设置支持中文的字体
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定默认字体
+    plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号'-'显示为方块的问题
+    x = df['date']
+    y =df ['low_temperature']
+    plt.figure(figsize=(10, 6))
+    plt.plot(x,y)
+    # 以日期为 X 轴，最高温度为 y 轴绘制折线图
+    plt.title("天气分析最低温度折线图")
+    plt.xlabel("date")
+    plt.ylabel("最低温度")
+    plt.savefig("weather1.png")
+
+
+requestParams = {
+        'key': apiKey,
+        'city': '天津',
+    }
+response = requests.get(apiUrl, params=requestParams)
+
+# 解析响应结果
+if response.status_code == 200:
+    responseResult = response.json()
+    datalist = responseResult["result"]["future"]
+    df = pd.DataFrame(columns=['date', 'low_temperature','high_temperature'])
+    for day in datalist:
+        temperature = day["temperature"].replace('℃', '').split('/')
+        low_tempe = float(temperature[0])
+        high_tempe = float(temperature[1])
+        date = day["date"]
+        df = df._append({'date':date,'low_temperature':low_tempe,'high_temperature':high_tempe},ignore_index=True)
+    df.to_csv('./doz/weather.csv', index=False)
+    mat()
+    mat_z()
+    plt.show()
+else:
+        print('请求异常')
